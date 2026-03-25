@@ -1,0 +1,7 @@
+DROP TABLE IF EXISTS system_logs;
+DROP TABLE IF EXISTS tenant_modules;
+DROP TABLE IF EXISTS subscriptions;
+DROP TABLE IF EXISTS plans;
+DROP TABLE IF EXISTS tenant_members;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS tenants;

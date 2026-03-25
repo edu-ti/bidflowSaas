@@ -1,0 +1,11 @@
+-- Licitações
+DROP TABLE IF EXISTS documentos;
+DROP TABLE IF EXISTS resultados;
+DROP TABLE IF EXISTS propostas;
+DROP TABLE IF EXISTS editais;
+
+-- CRM
+DROP TABLE IF EXISTS activities;
+DROP TABLE IF EXISTS opportunities;
+DROP TABLE IF EXISTS leads;
+DROP TABLE IF EXISTS customers;

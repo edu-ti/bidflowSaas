@@ -1,0 +1,62 @@
+version: "2"
+sql:
+  - schema: "database/migrations"
+    queries: "core/tenant/queries/queries.sql"
+    engine: "postgresql"
+    gen:
+      go:
+        package: "tenantqueries"
+        out: "core/tenant/queries"
+        sql_package: "database/sql"
+        emit_interface: true
+        emit_json_tags: true
+  - schema: "database/migrations"
+    queries: "core/auth/queries/queries.sql"
+    engine: "postgresql"
+    gen:
+      go:
+        package: "authqueries"
+        out: "core/auth/queries"
+        sql_package: "database/sql"
+        emit_interface: true
+        emit_json_tags: true
+  - schema: "database/migrations"
+    queries: "core/billing/queries/queries.sql"
+    engine: "postgresql"
+    gen:
+      go:
+        package: "billingqueries"
+        out: "core/billing/queries"
+        sql_package: "database/sql"
+        emit_interface: true
+        emit_json_tags: true
+  - schema: "database/migrations"
+    queries: "core/system_logs/queries/queries.sql"
+    engine: "postgresql"
+    gen:
+      go:
+        package: "systemlogsqueries"
+        out: "core/system_logs/queries"
+        sql_package: "database/sql"
+        emit_interface: true
+        emit_json_tags: true
+  - schema: "database/migrations"
+    queries: "modules/crm/queries/queries.sql"
+    engine: "postgresql"
+    gen:
+      go:
+        package: "crmqueries"
+        out: "modules/crm/queries"
+        sql_package: "database/sql"
+        emit_interface: true
+        emit_json_tags: true
+  - schema: "database/migrations"
+    queries: "modules/licitacoes/queries/queries.sql"
+    engine: "postgresql"
+    gen:
+      go:
+        package: "licitacoesqueries"
+        out: "modules/licitacoes/queries"
+        sql_package: "database/sql"
+        emit_interface: true
+        emit_json_tags: true
