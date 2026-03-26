@@ -23,7 +23,12 @@ type ProcessEditalRequest struct {
 }
 
 func (h *Handler) ProcessEdital(w http.ResponseWriter, r *http.Request) {
-	tenantID := middleware.GetTenantID(r.Context())
+	tenantIDStr := middleware.GetTenantID(r.Context())
+	tenantID, err := uuid.Parse(tenantIDStr)
+	if err != nil {
+		http.Error(w, "Invalid Tenant ID", http.StatusUnauthorized)
+		return
+	}
 
 	var req ProcessEditalRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -45,3 +50,4 @@ func (h *Handler) ProcessEdital(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusAccepted)
 	json.NewEncoder(w).Encode(map[string]string{"status": "queued"})
 }
+

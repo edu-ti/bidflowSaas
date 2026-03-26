@@ -18,9 +18,7 @@ func NewHandler(svc *Service) *Handler {
 }
 
 func (h *Handler) ListCustomers(w http.ResponseWriter, r *http.Request) {
-	tenantID := middleware.GetTenantID(r.Context())
-
-	customers, err := h.svc.ListCustomers(r.Context(), tenantID)
+	customers, err := h.svc.ListCustomers(r.Context())
 	if err != nil {
 		http.Error(w, "Failed to list customers", http.StatusInternalServerError)
 		return
@@ -31,9 +29,7 @@ func (h *Handler) ListCustomers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ListOpportunities(w http.ResponseWriter, r *http.Request) {
-	tenantID := middleware.GetTenantID(r.Context())
-
-	opportunities, err := h.svc.ListOpportunities(r.Context(), tenantID)
+	opportunities, err := h.svc.ListOpportunities(r.Context())
 	if err != nil {
 		http.Error(w, "Failed to list opportunities", http.StatusInternalServerError)
 		return
@@ -51,7 +47,6 @@ type CreateCustomerRequest struct {
 }
 
 func (h *Handler) CreateCustomer(w http.ResponseWriter, r *http.Request) {
-	tenantID := middleware.GetTenantID(r.Context())
 	userID := r.Context().Value(middleware.UserIDKey).(uuid.UUID)
 
 	var req CreateCustomerRequest
@@ -60,7 +55,7 @@ func (h *Handler) CreateCustomer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	customer, err := h.svc.CreateCustomer(r.Context(), tenantID, req.Name, req.Email, req.Phone, req.DocumentID, uuid.NullUUID{UUID: userID, Valid: true})
+	customer, err := h.svc.CreateCustomer(r.Context(), req.Name, req.Email, req.Phone, req.DocumentID, uuid.NullUUID{UUID: userID, Valid: true})
 	if err != nil {
 		http.Error(w, "Failed to create customer", http.StatusInternalServerError)
 		return
@@ -70,3 +65,4 @@ func (h *Handler) CreateCustomer(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(customer)
 }
+

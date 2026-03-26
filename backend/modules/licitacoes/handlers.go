@@ -19,7 +19,12 @@ func NewHandler(svc *Service) *Handler {
 }
 
 func (h *Handler) ListEditais(w http.ResponseWriter, r *http.Request) {
-	tenantID := middleware.GetTenantID(r.Context())
+	tenantIDStr := middleware.GetTenantID(r.Context())
+	tenantID, err := uuid.Parse(tenantIDStr)
+	if err != nil {
+		http.Error(w, "Invalid Tenant ID", http.StatusUnauthorized)
+		return
+	}
 
 	editais, err := h.svc.ListEditais(r.Context(), tenantID)
 	if err != nil {
@@ -39,7 +44,12 @@ type CreateEditalRequest struct {
 }
 
 func (h *Handler) CreateEdital(w http.ResponseWriter, r *http.Request) {
-	tenantID := middleware.GetTenantID(r.Context())
+	tenantIDStr := middleware.GetTenantID(r.Context())
+	tenantID, err := uuid.Parse(tenantIDStr)
+	if err != nil {
+		http.Error(w, "Invalid Tenant ID", http.StatusUnauthorized)
+		return
+	}
 	userID := r.Context().Value(middleware.UserIDKey).(uuid.UUID)
 
 	var req CreateEditalRequest
@@ -58,3 +68,4 @@ func (h *Handler) CreateEdital(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(edital)
 }
+
