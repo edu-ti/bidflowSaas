@@ -32,11 +32,12 @@ func NewRouter(cfg RouterConfig) http.Handler {
 	// 1. Enforce API Versioning
 	api := r.PathPrefix("/api/v1").Subrouter()
 
-	// Rate Limiting on global API (e.g. 100 requests per second burst)
-	api.Use(middleware.RateLimit(100.0, 50))
-
 	// Public routes
-	api.HandleFunc("/auth/login", func(w http.ResponseWriter, r *http.Request) {
+	
+	// Stricter rate limit solely for login (e.g. 5 reqs/sec, 5 burst)
+	loginRouter := api.PathPrefix("/auth").Subrouter()
+	loginRouter.Use(middleware.RateLimit(5.0, 5))
+	loginRouter.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
 		// placeholder
 	}).Methods(http.MethodPost)
 	
@@ -49,9 +50,13 @@ func NewRouter(cfg RouterConfig) http.Handler {
 	// Build shared middleware instances
 	authMiddleware := middleware.RequireAuth(cfg.JWTSecret)
 	tenantMiddleware := middleware.RequireTenant(cfg.DB)
+	
+	// General higher rate limit for standard authenticated routes
+	apiRateLimit := middleware.RateLimit(100.0, 50)
 
 	// CRM Module Isolation - flat subgroup with strict exact Auth -> Tenant -> Module order
 	crmRouter := api.PathPrefix("/crm").Subrouter()
+	crmRouter.Use(apiRateLimit)
 	crmRouter.Use(authMiddleware)
 	crmRouter.Use(tenantMiddleware)
 	crmRouter.Use(middleware.RequireModule(cfg.DB, "crm"))
@@ -59,6 +64,7 @@ func NewRouter(cfg RouterConfig) http.Handler {
 
 	// Licitacoes Module Isolation
 	licitacoesRouter := api.PathPrefix("/licitacoes").Subrouter()
+	licitacoesRouter.Use(apiRateLimit)
 	licitacoesRouter.Use(authMiddleware)
 	licitacoesRouter.Use(tenantMiddleware)
 	licitacoesRouter.Use(middleware.RequireModule(cfg.DB, "licitacoes"))
@@ -66,6 +72,7 @@ func NewRouter(cfg RouterConfig) http.Handler {
 
 	// AI Module Isolation
 	aiRouter := api.PathPrefix("/ai").Subrouter()
+	aiRouter.Use(apiRateLimit)
 	aiRouter.Use(authMiddleware)
 	aiRouter.Use(tenantMiddleware)
 	aiRouter.Use(middleware.RequireModule(cfg.DB, "ai"))
@@ -73,6 +80,7 @@ func NewRouter(cfg RouterConfig) http.Handler {
 
 	return r
 }
+
 
 
 
