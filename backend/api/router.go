@@ -29,11 +29,12 @@ type RouterConfig struct {
 func NewRouter(cfg RouterConfig) http.Handler {
 	r := mux.NewRouter()
 
-	// API Versioning
+	// 1. API Versioning
 	api := r.PathPrefix("/api/v1").Subrouter()
 
 	// Public routes
 	api.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status":"ok"}`))
 	}).Methods(http.MethodGet)
@@ -42,34 +43,26 @@ func NewRouter(cfg RouterConfig) http.Handler {
 	secured := api.PathPrefix("").Subrouter()
 	secured.Use(middleware.RequireAuth(cfg.JWTSecret))
 
-	// Tenant-scoped routes (Requires Tenant context extracted and validated)
+	// Tenant-scoped routes
 	tenantRoutes := secured.PathPrefix("/t").Subrouter()
 	tenantRoutes.Use(middleware.RequireTenant(cfg.DB))
 
 	// CRM Module Isolation
 	crmRouter := tenantRoutes.PathPrefix("/crm").Subrouter()
 	crmRouter.Use(middleware.RequireModule(cfg.BillingSvc, "crm"))
-	if cfg.CRMHandler != nil {
-		crmRouter.HandleFunc("/customers", cfg.CRMHandler.ListCustomers).Methods(http.MethodGet)
-		crmRouter.HandleFunc("/customers", cfg.CRMHandler.CreateCustomer).Methods(http.MethodPost)
-		crmRouter.HandleFunc("/opportunities", cfg.CRMHandler.ListOpportunities).Methods(http.MethodGet)
-	}
+	crm.RegisterRoutes(crmRouter, cfg.CRMHandler)
 
 	// Licitacoes Module Isolation
 	licitacoesRouter := tenantRoutes.PathPrefix("/licitacoes").Subrouter()
 	licitacoesRouter.Use(middleware.RequireModule(cfg.BillingSvc, "licitacoes"))
-	if cfg.LicHandler != nil {
-		licitacoesRouter.HandleFunc("/editais", cfg.LicHandler.ListEditais).Methods(http.MethodGet)
-		licitacoesRouter.HandleFunc("/editais", cfg.LicHandler.CreateEdital).Methods(http.MethodPost)
-	}
+	licitacoes.RegisterRoutes(licitacoesRouter, cfg.LicHandler)
 
 	// AI Module Isolation
 	aiRouter := tenantRoutes.PathPrefix("/ai").Subrouter()
 	aiRouter.Use(middleware.RequireModule(cfg.BillingSvc, "ai"))
-	if cfg.AIHandler != nil {
-		aiRouter.HandleFunc("/process-edital", cfg.AIHandler.ProcessEdital).Methods(http.MethodPost)
-	}
+	ai.RegisterRoutes(aiRouter, cfg.AIHandler)
 
 	return r
 }
+
 
