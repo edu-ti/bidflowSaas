@@ -32,6 +32,9 @@ func NewRouter(cfg RouterConfig) http.Handler {
 	// 1. Enforce API Versioning
 	api := r.PathPrefix("/api/v1").Subrouter()
 
+	// Rate Limiting on global API (e.g. 100 requests per second burst)
+	api.Use(middleware.RateLimit(100.0, 50))
+
 	// Public routes
 	api.HandleFunc("/auth/login", func(w http.ResponseWriter, r *http.Request) {
 		// placeholder
@@ -70,6 +73,7 @@ func NewRouter(cfg RouterConfig) http.Handler {
 
 	return r
 }
+
 
 
 

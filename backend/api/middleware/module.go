@@ -24,7 +24,7 @@ func RequireModule(db *sql.DB, moduleName string) func(http.Handler) http.Handle
 			if err != nil {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusForbidden)
-				w.Write([]byte(`{"error": "module_not_enabled", "message": "Module not available in current plan"}`))
+				w.Write([]byte(`{"error": "module_not_enabled", "message": "Module not included in subscription plan"}`))
 				return
 			}
 
@@ -32,4 +32,5 @@ func RequireModule(db *sql.DB, moduleName string) func(http.Handler) http.Handle
 		})
 	}
 }
+
 
