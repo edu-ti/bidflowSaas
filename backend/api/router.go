@@ -29,40 +29,47 @@ type RouterConfig struct {
 func NewRouter(cfg RouterConfig) http.Handler {
 	r := mux.NewRouter()
 
-	// 1. API Versioning
+	// 1. Enforce API Versioning
 	api := r.PathPrefix("/api/v1").Subrouter()
 
 	// Public routes
+	api.HandleFunc("/auth/login", func(w http.ResponseWriter, r *http.Request) {
+		// placeholder
+	}).Methods(http.MethodPost)
+	
 	api.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status":"ok"}`))
 	}).Methods(http.MethodGet)
 
-	// Secured routes (Requires Auth)
-	secured := api.PathPrefix("").Subrouter()
-	secured.Use(middleware.RequireAuth(cfg.JWTSecret))
+	// Build shared middleware instances
+	authMiddleware := middleware.RequireAuth(cfg.JWTSecret)
+	tenantMiddleware := middleware.RequireTenant(cfg.DB)
 
-	// Tenant-scoped routes
-	tenantRoutes := secured.PathPrefix("/t").Subrouter()
-	tenantRoutes.Use(middleware.RequireTenant(cfg.DB))
-
-	// CRM Module Isolation
-	crmRouter := tenantRoutes.PathPrefix("/crm").Subrouter()
+	// CRM Module Isolation - flat subgroup with strict exact Auth -> Tenant -> Module order
+	crmRouter := api.PathPrefix("/crm").Subrouter()
+	crmRouter.Use(authMiddleware)
+	crmRouter.Use(tenantMiddleware)
 	crmRouter.Use(middleware.RequireModule(cfg.BillingSvc, "crm"))
 	crm.RegisterRoutes(crmRouter, cfg.CRMHandler)
 
 	// Licitacoes Module Isolation
-	licitacoesRouter := tenantRoutes.PathPrefix("/licitacoes").Subrouter()
+	licitacoesRouter := api.PathPrefix("/licitacoes").Subrouter()
+	licitacoesRouter.Use(authMiddleware)
+	licitacoesRouter.Use(tenantMiddleware)
 	licitacoesRouter.Use(middleware.RequireModule(cfg.BillingSvc, "licitacoes"))
 	licitacoes.RegisterRoutes(licitacoesRouter, cfg.LicHandler)
 
 	// AI Module Isolation
-	aiRouter := tenantRoutes.PathPrefix("/ai").Subrouter()
+	aiRouter := api.PathPrefix("/ai").Subrouter()
+	aiRouter.Use(authMiddleware)
+	aiRouter.Use(tenantMiddleware)
 	aiRouter.Use(middleware.RequireModule(cfg.BillingSvc, "ai"))
 	ai.RegisterRoutes(aiRouter, cfg.AIHandler)
 
 	return r
 }
+
 
 

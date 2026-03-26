@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"database/sql"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -15,11 +16,24 @@ type contextKey string
 const TenantKey contextKey = "tenant_id"
 const UserIDKey contextKey = "user_id"
 
-// RequireTenant returns a valid mux.MiddlewareFunc that ensures the request belongs to a valid tenant.
 func RequireTenant(db *sql.DB) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Extract tenant ONLY from authenticated user (JWT)
+			// Safe context extraction for User setup by Auth middleware
+			userVal := r.Context().Value(UserIDKey)
+			if userVal == nil {
+				slog.Warn("Missing user context attempting tenant resolution")
+				http.Error(w, `{"error":"unauthorized", "message":"Missing user context"}`, http.StatusUnauthorized)
+				return
+			}
+
+			_, ok := userVal.(uuid.UUID)
+			if !ok {
+				slog.Error("Unsafe User type assertion failure")
+				http.Error(w, `{"error":"internal_error", "message":"Internal server error"}`, http.StatusInternalServerError)
+				return
+			}
+
 			authHeader := r.Header.Get("Authorization")
 			if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
 				http.Error(w, `{"error":"invalid_tenant", "message":"Missing authorization token"}`, http.StatusUnauthorized)
@@ -29,40 +43,43 @@ func RequireTenant(db *sql.DB) func(http.Handler) http.Handler {
 
 			token, _, err := new(jwt.Parser).ParseUnverified(tokenStr, jwt.MapClaims{})
 			if err != nil {
+				slog.Warn("Invalid token format for tenant extraction")
 				http.Error(w, `{"error":"invalid_tenant", "message":"Invalid token format"}`, http.StatusUnauthorized)
 				return
 			}
 
 			claims, ok := token.Claims.(jwt.MapClaims)
 			if !ok {
+				slog.Warn("Could not parse map claims for tenant extraction")
 				http.Error(w, `{"error":"invalid_tenant", "message":"Invalid token claims"}`, http.StatusUnauthorized)
 				return
 			}
 
 			tenantIDStr, ok := claims["tenant_id"].(string)
 			if !ok || tenantIDStr == "" {
+				slog.Warn("Invalid tenant attempt: Tenant ID missing in JWT")
 				http.Error(w, `{"error":"invalid_tenant", "message":"Tenant not found or unauthorized"}`, http.StatusUnauthorized)
 				return
 			}
 
 			tenantID, err := uuid.Parse(tenantIDStr)
 			if err != nil {
+				slog.Warn("Malformed Tenant ID spoofing attempt", "tenantId", tenantIDStr)
 				http.Error(w, `{"error":"invalid_tenant", "message":"Malformed Tenant ID"}`, http.StatusUnauthorized)
 				return
 			}
 
-			// Validate tenant in database
-			var exists bool
-			err = db.QueryRowContext(r.Context(), "SELECT EXISTS(SELECT 1 FROM tenants WHERE id = $1 AND active = true)", tenantID).Scan(&exists)
-			if err != nil || !exists {
-				// Block invalid requests
+			// Validate tenant in database before allowing request:
+			var id uuid.UUID
+			err = db.QueryRowContext(r.Context(), "SELECT id FROM tenants WHERE id = $1 AND active = true;", tenantID).Scan(&id)
+			if err != nil {
+				slog.Warn("Tenant validation failed or inactive mapping", "tenantId", tenantIDStr, "error", err)
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte(`{"error":"invalid_tenant", "message":"Tenant not found or unauthorized"}`))
+				w.Write([]byte(`{"error": "invalid_tenant", "message": "Tenant not found or inactive"}`))
 				return
 			}
 
-			// Inject tenant into request context
 			ctx := context.WithValue(r.Context(), TenantKey, tenantIDStr)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
@@ -114,5 +131,6 @@ func GetTenantID(ctx context.Context) string {
 	}
 	return ""
 }
+
 
 
