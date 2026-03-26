@@ -23,14 +23,18 @@ func RequireTenant(db *sql.DB) func(http.Handler) http.Handler {
 			userVal := r.Context().Value(UserIDKey)
 			if userVal == nil {
 				slog.Warn("Missing user context attempting tenant resolution")
-				http.Error(w, `{"error":"unauthorized", "message":"Missing user context"}`, http.StatusUnauthorized)
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write([]byte(`{"error": "unauthorized", "message": "missing user context"}`))
 				return
 			}
 
 			_, ok := userVal.(uuid.UUID)
 			if !ok {
 				slog.Error("Unsafe User type assertion failure")
-				http.Error(w, `{"error":"internal_error", "message":"Internal server error"}`, http.StatusInternalServerError)
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(`{"error": "invalid_user_context", "message": "invalid user type in context"}`))
 				return
 			}
 
@@ -131,6 +135,7 @@ func GetTenantID(ctx context.Context) string {
 	}
 	return ""
 }
+
 
 
 

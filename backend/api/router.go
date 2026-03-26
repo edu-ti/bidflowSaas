@@ -51,25 +51,26 @@ func NewRouter(cfg RouterConfig) http.Handler {
 	crmRouter := api.PathPrefix("/crm").Subrouter()
 	crmRouter.Use(authMiddleware)
 	crmRouter.Use(tenantMiddleware)
-	crmRouter.Use(middleware.RequireModule(cfg.BillingSvc, "crm"))
+	crmRouter.Use(middleware.RequireModule(cfg.DB, "crm"))
 	crm.RegisterRoutes(crmRouter, cfg.CRMHandler)
 
 	// Licitacoes Module Isolation
 	licitacoesRouter := api.PathPrefix("/licitacoes").Subrouter()
 	licitacoesRouter.Use(authMiddleware)
 	licitacoesRouter.Use(tenantMiddleware)
-	licitacoesRouter.Use(middleware.RequireModule(cfg.BillingSvc, "licitacoes"))
+	licitacoesRouter.Use(middleware.RequireModule(cfg.DB, "licitacoes"))
 	licitacoes.RegisterRoutes(licitacoesRouter, cfg.LicHandler)
 
 	// AI Module Isolation
 	aiRouter := api.PathPrefix("/ai").Subrouter()
 	aiRouter.Use(authMiddleware)
 	aiRouter.Use(tenantMiddleware)
-	aiRouter.Use(middleware.RequireModule(cfg.BillingSvc, "ai"))
+	aiRouter.Use(middleware.RequireModule(cfg.DB, "ai"))
 	ai.RegisterRoutes(aiRouter, cfg.AIHandler)
 
 	return r
 }
+
 
 
 

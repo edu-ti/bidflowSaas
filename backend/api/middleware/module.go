@@ -1,29 +1,30 @@
 package middleware
 
 import (
+	"database/sql"
 	"net/http"
 
 	"github.com/google/uuid"
-	"lastsaas/core/billing"
 )
 
-func RequireModule(billingSvc *billing.Service, moduleName string) func(http.Handler) http.Handler {
+func RequireModule(db *sql.DB, moduleName string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			tenantIDStr := GetTenantID(r.Context())
 			tenantID, err := uuid.Parse(tenantIDStr)
 			if err != nil {
-				http.Error(w, "Invalid Tenant ID", http.StatusUnauthorized)
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write([]byte(`{"error": "invalid_tenant", "message": "Tenant not found or inactive"}`))
 				return
 			}
 			
-			hasAccess, err := billingSvc.TenantHasModule(r.Context(), tenantID, moduleName)
+			var exists int
+			err = db.QueryRowContext(r.Context(), "SELECT 1 FROM tenant_modules WHERE tenant_id = $1 AND module = $2", tenantID, moduleName).Scan(&exists)
 			if err != nil {
-				http.Error(w, "Internal Server Error while checking module access", http.StatusInternalServerError)
-				return
-			}
-			if !hasAccess {
-				http.Error(w, "Module not enabled in current tenant plan", http.StatusForbidden)
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusForbidden)
+				w.Write([]byte(`{"error": "module_not_enabled", "message": "Module not available in current plan"}`))
 				return
 			}
 
@@ -31,3 +32,4 @@ func RequireModule(billingSvc *billing.Service, moduleName string) func(http.Han
 		})
 	}
 }
+
