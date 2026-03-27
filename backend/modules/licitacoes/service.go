@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"time"
 
+	"lastsaas/core/billing"
 	licqueries "lastsaas/modules/licitacoes/queries"
 
 	"github.com/google/uuid"
@@ -23,7 +24,7 @@ func NewService(db *sql.DB) *Service {
 }
 
 func (s *Service) CreateEdital(ctx context.Context, tenantId uuid.UUID, number, agency, objectDesc string, openingDate time.Time, createdBy uuid.NullUUID) (licqueries.Editai, error) {
-	return s.q.CreateEdital(ctx, licqueries.CreateEditalParams{
+	result, err := s.q.CreateEdital(ctx, licqueries.CreateEditalParams{
 		TenantID:          tenantId,
 		Number:            number,
 		Agency:            agency,
@@ -32,6 +33,10 @@ func (s *Service) CreateEdital(ctx context.Context, tenantId uuid.UUID, number, 
 		Status:            "open",
 		CreatedBy:         createdBy,
 	})
+	if err == nil {
+		_ = billing.IncrementUsage(ctx, s.db, tenantId, "editais")
+	}
+	return result, err
 }
 
 func (s *Service) ListEditais(ctx context.Context, tenantId uuid.UUID) ([]licqueries.Editai, error) {
@@ -39,12 +44,16 @@ func (s *Service) ListEditais(ctx context.Context, tenantId uuid.UUID) ([]licque
 }
 
 func (s *Service) CreateProposta(ctx context.Context, tenantId, editalId uuid.UUID, value string, status string, createdBy uuid.NullUUID) (licqueries.Proposta, error) {
-	return s.q.CreateProposta(ctx, licqueries.CreatePropostaParams{
+	result, err := s.q.CreateProposta(ctx, licqueries.CreatePropostaParams{
 		TenantID: tenantId,
 		EditalID: editalId,
 		Status:   status,
 		CreatedBy: createdBy,
 	})
+	if err == nil {
+		_ = billing.IncrementUsage(ctx, s.db, tenantId, "propostas")
+	}
+	return result, err
 }
 
 func (s *Service) ListPropostas(ctx context.Context, tenantId, editalId uuid.UUID) ([]licqueries.Proposta, error) {
@@ -64,3 +73,4 @@ func (s *Service) RegisterResultado(ctx context.Context, tenantId, editalId uuid
 		CreatedBy:  createdBy,
 	})
 }
+

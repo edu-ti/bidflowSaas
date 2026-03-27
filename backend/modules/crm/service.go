@@ -8,16 +8,19 @@ import (
 	"github.com/google/uuid"
 
 	"lastsaas/api/middleware"
+	"lastsaas/core/billing"
 	crmrepo "lastsaas/modules/crm/repository"
 	crmqueries "lastsaas/modules/crm/queries"
 )
 
 type Service struct {
+	db   *sql.DB
 	repo crmrepo.Repository
 }
 
 func NewService(db *sql.DB) *Service {
 	return &Service{
+		db:   db,
 		repo: crmrepo.NewRepository(db),
 	}
 }
@@ -88,8 +91,12 @@ func (s *Service) CreateLead(ctx context.Context, input CreateLeadInput) (*crmqu
 		return nil, err
 	}
 
+	// Increment usage limitation tracking
+	_ = billing.IncrementUsage(ctx, s.db, tenantID, "leads")
+
 	return &lead, nil
 }
+
 
 func (s *Service) ListLeads(ctx context.Context) ([]crmqueries.Lead, error) {
 	tenantIDStr := middleware.GetTenantID(ctx)
