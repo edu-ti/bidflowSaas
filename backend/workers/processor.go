@@ -1,14 +1,9 @@
 package workers
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"log/slog"
+	"database/sql"
 
 	"github.com/hibiken/asynq"
-
-	"lastsaas/modules/ai"
 )
 
 type Processor struct {
@@ -16,7 +11,7 @@ type Processor struct {
 	mux    *asynq.ServeMux
 }
 
-func NewProcessor(redisAddr string) *Processor {
+func NewProcessor(redisAddr string, db *sql.DB) *Processor {
 	srv := asynq.NewServer(
 		asynq.RedisClientOpt{Addr: redisAddr},
 		asynq.Config{
@@ -31,10 +26,8 @@ func NewProcessor(redisAddr string) *Processor {
 
 	mux := asynq.NewServeMux()
 
-	// Register handlers here
-	// This acts as a bridge: when tasks are processed, it would normally call
-	// the external python service out from here.
-	mux.HandleFunc(ai.TypeProcessEdital, HandleProcessEdital)
+	// Register handlers natively within the workers package
+	mux.HandleFunc(TypeAIAnalysis, HandleAIAnalysisTask(db))
 
 	return &Processor{
 		server: srv,
@@ -48,22 +41,4 @@ func (p *Processor) Start() error {
 
 func (p *Processor) Stop() {
 	p.server.Stop()
-}
-
-func HandleProcessEdital(ctx context.Context, t *asynq.Task) error {
-	var p ai.ProcessEditalPayload
-	if err := json.Unmarshal(t.Payload(), &p); err != nil {
-		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
-	}
-
-	slog.Info("Processing task: Preparing to send edital to Python AI Service",
-		"tenant_id", p.TenantID,
-		"edital_id", p.EditalID,
-		"file_url", p.FileURL,
-	)
-
-	// Here we would make an HTTP call to the python microservice
-	// e.g. http.Post("http://ai-service/process", "application/json", body)
-
-	return nil
 }

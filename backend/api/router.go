@@ -80,7 +80,7 @@ func NewRouter(cfg RouterConfig) http.Handler {
 	aiRouter.Use(authMiddleware)
 	aiRouter.Use(tenantMiddleware)
 	aiRouter.Use(middleware.RequireModule(cfg.DB, "ai"))
-	ai.RegisterRoutes(aiRouter, cfg.AIHandler)
+	ai.RegisterRoutes(aiRouter, cfg.AIHandler, cfg.DB)
 
 	return r
 }

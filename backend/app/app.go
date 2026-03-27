@@ -50,7 +50,7 @@ func New(cfg *config.Config) (*App, error) {
 	billingSvc := billing.NewService(database.Client)
 	crmSvc := crm.NewService(database.Client)
 	licSvc := licitacoes.NewService(database.Client)
-	aiSvc := ai.NewService("localhost:6379") // default redis
+	aiSvc := ai.NewService(database.Client, "localhost:6379") // default redis
 
 	// Initialize Handlers
 	crmHandler := crm.NewHandler(crmSvc)
