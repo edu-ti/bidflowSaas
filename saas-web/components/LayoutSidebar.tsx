@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Search, Monitor, Bell, Settings, CreditCard, LogOut } from 'lucide-react';

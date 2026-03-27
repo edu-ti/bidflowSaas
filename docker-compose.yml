@@ -1,4 +1,4 @@
-services:
+SERVICES:
   postgres:
     image: pgvector/pgvector:pg16
     container_name: bidflow_postgres
@@ -15,6 +15,7 @@ services:
       retries: 5
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
 
   redis:
     image: redis:7
@@ -28,6 +29,7 @@ services:
       retries: 5
     volumes:
       - redis_data:/data
+    restart: unless-stopped
 
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -41,62 +43,6 @@ services:
       - postgres
     volumes:
       - pgadmin_data:/var/lib/pgadmin
-
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: bidflow_backend
-    env_file:
-      - ./backend/.env
-    ports:
-      - "8080:8080"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    restart: unless-stopped
-
-  workers:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.workers
-    container_name: bidflow_workers
-    env_file:
-      - ./backend/.env
-    depends_on:
-      backend:
-        condition: service_started
-      redis:
-        condition: service_healthy
-    restart: unless-stopped
-
-  ai-service:
-    build:
-      context: ./ai-service
-      dockerfile: Dockerfile
-    container_name: bidflow_ai
-    env_file:
-      - ./ai-service/.env
-    ports:
-      - "8000:8000"
-    depends_on:
-      - redis
-    restart: unless-stopped
-
-  frontend:
-    build:
-      context: ./saas-web
-      dockerfile: Dockerfile
-    container_name: bidflow_frontend
-    env_file:
-      - ./saas-web/.env.local
-    ports:
-      - "3000:3000"
-    depends_on:
-      - backend
-      - ai-service
     restart: unless-stopped
 
 volumes:
