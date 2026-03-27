@@ -1,3 +1,7 @@
+-- External Stripe Integration Identifiers
+ALTER TABLE plans ADD COLUMN stripe_price_id VARCHAR(255);
+ALTER TABLE tenants ADD COLUMN stripe_customer_id VARCHAR(255);
+
 -- Alter Subscriptions for External Monetizations
 ALTER TABLE subscriptions ADD COLUMN external_subscription_id VARCHAR(255);
 ALTER TABLE subscriptions ADD COLUMN current_period_end TIMESTAMP WITH TIME ZONE;
@@ -35,3 +39,4 @@ CREATE TABLE usage_tracking (
     period_end TIMESTAMP WITH TIME ZONE NOT NULL,
     UNIQUE(tenant_id, resource)
 );
+

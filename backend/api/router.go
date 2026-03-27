@@ -34,6 +34,9 @@ func NewRouter(cfg RouterConfig) http.Handler {
 
 	// Public routes
 	
+	// Stripe Webhooks (bypass auth and general restrictive rate limits, requires external signature)
+	api.HandleFunc("/webhooks/stripe", billing.HandleStripeWebhook(cfg.DB)).Methods(http.MethodPost)
+	
 	// Stricter rate limit solely for login (e.g. 5 reqs/sec, 5 burst)
 	loginRouter := api.PathPrefix("/auth").Subrouter()
 	loginRouter.Use(middleware.RateLimit(5.0, 5))
@@ -46,6 +49,7 @@ func NewRouter(cfg RouterConfig) http.Handler {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status":"ok"}`))
 	}).Methods(http.MethodGet)
+
 
 	// Build shared middleware instances
 	authMiddleware := middleware.RequireAuth(cfg.JWTSecret)

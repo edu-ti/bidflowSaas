@@ -25,7 +25,13 @@ func RequireModule(db *sql.DB, moduleName string) func(http.Handler) http.Handle
 				FROM subscriptions s
 				JOIN plan_modules pm ON s.plan_id = pm.plan_id
 				JOIN modules m ON pm.module_id = m.id
-				WHERE s.tenant_id = $1 AND m.name = $2 AND s.status = 'active'
+				WHERE s.tenant_id = $1 
+				  AND m.name = $2 
+				  AND (
+				    (s.status = 'active' AND s.current_period_end > NOW()) 
+				    OR 
+				    (s.trial_ends_at > NOW())
+				  )
 			`, tenantID, moduleName).Scan(&exists)
 			
 			if err != nil {
@@ -39,6 +45,7 @@ func RequireModule(db *sql.DB, moduleName string) func(http.Handler) http.Handle
 		})
 	}
 }
+
 
 
 
