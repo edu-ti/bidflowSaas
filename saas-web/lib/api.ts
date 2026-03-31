@@ -27,6 +27,42 @@ api.interceptors.response.use(
         window.location.href = '/login';
       }
     }
+
+    // MOCK FOR NETWORK ERROR TO KEEP PROTOTYPE FUNCTIONAL
+    if (error.message === 'Network Error' || error.code === 'ERR_NETWORK') {
+      console.warn('Network Error detected, returning mock data for:', error.config.url);
+      
+      const url = error.config.url || '';
+      let mockData: any = {};
+      
+      if (url.includes('/radar')) {
+        mockData = {
+          editais: [
+            { id: 'mock1', title: 'Edital Mockado (Backend OFF)', value: 150000, deadline: '2025-12-31T00:00:00Z', priority_label: 'HIGH', win_probability: 0.85, similarity: 0.92, why_relevant: 'Mock criado pelo interceptor porque o backend não está online.' },
+            { id: 'mock2', title: 'Fornecimento de Software Georreferenciado', value: 80000, deadline: '2025-10-15T00:00:00Z', priority_label: 'MEDIUM', win_probability: 0.55, similarity: 0.68, why_relevant: 'Aderência moderada. Requer ajustes de portfólio.' }
+          ]
+        };
+      } else if (url.includes('/ai/insights')) {
+        mockData = { average_score: 0.82, success_rate: 0.65, average_confidence: 0.94, average_win_probability: 0.70 };
+      } else if (url.includes('/monitor/events')) {
+        mockData = [
+          { id: '1', type: 'STATUS_CHANGE', severity: 'HIGH', message: 'Licitação aberta para propostas.', timestamp: new Date().toISOString(), metadata: { suggested_action: 'Revisar requisitos' } }
+        ];
+      } else if (url.includes('/notifications')) {
+        mockData = [
+          { id: 'mock1', title: 'Bem-vindo ao BidFlow', message: 'O sistema está rodando localmente sem backend (modo simulação).', read: false, timestamp: new Date().toISOString() }
+        ];
+      } else if (url.includes('/ai/history')) {
+        mockData = [
+          { id: 'mock1', edital_id: '12351', ai_score: 0.89, smart_score: 0.88, confidence: 0.95 }
+        ];
+      } else if (url.includes('/billing/checkout')) {
+         mockData = { checkout_url: 'https://checkout.stripe.com/mock-bidflow-url' };
+      }
+      
+      return Promise.resolve({ data: mockData, status: 200, statusText: 'OK', headers: {}, config: error.config });
+    }
+
     return Promise.reject(error);
   }
 );

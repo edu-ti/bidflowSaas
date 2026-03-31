@@ -28,9 +28,9 @@ export default function LandingPage() {
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
           <a href="#features" className="hover:text-emerald-400 transition-colors">Funcionalidades</a>
           <a href="#pricing" className="hover:text-emerald-400 transition-colors">Preços</a>
-          <Link href="/login" className="hover:text-emerald-400 transition-colors">Entrar</Link>
-          <Link href="/signup">
-            <Button className="bg-white text-black hover:bg-gray-200 px-6 font-semibold">
+          <Link href="/dashboard" className="hover:text-emerald-400 transition-colors">Entrar</Link>
+          <Link href="/dashboard">
+            <Button className="bg-white !text-black hover:bg-gray-200 px-6 font-semibold">
               Get Started
             </Button>
           </Link>
@@ -60,9 +60,11 @@ export default function LandingPage() {
                 Começar agora <ArrowRight className="ml-2" size={20} />
               </Button>
             </Link>
-            <Button className="h-14 px-10 text-lg bg-gray-900 border border-gray-800 hover:bg-gray-850 hover:border-gray-700 transition-all">
-              Ver demonstração
-            </Button>
+            <Link href="/dashboard/radar">
+              <Button className="h-14 px-10 text-lg bg-gray-900 border border-gray-800 hover:bg-gray-850 hover:border-gray-700 transition-all">
+                Ver demonstração
+              </Button>
+            </Link>
           </div>
         </section>
 
@@ -120,9 +122,11 @@ export default function LandingPage() {
                 Junte-se a centenas de empresas que já estão usando BidFlow para crescer. 
                 Teste grátis por 14 dias.
               </p>
-              <Button className="h-14 px-12 text-lg bg-white text-black hover:bg-gray-200">
-                Criar conta gratuita
-              </Button>
+              <Link href="/dashboard">
+                <Button className="h-14 px-12 text-lg bg-white !text-black hover:bg-gray-200 font-bold">
+                  Criar conta gratuita
+                </Button>
+              </Link>
             </div>
             {/* Decoration */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-[80px] rounded-full" />
@@ -147,25 +151,25 @@ export default function LandingPage() {
             <div className="space-y-4">
               <h5 className="font-semibold text-gray-100">Produto</h5>
               <ul className="space-y-2 text-sm text-gray-500">
-                <li><a href="#" className="hover:text-emerald-400 transition-colors">Funcionalidades</a></li>
-                <li><a href="#" className="hover:text-emerald-400 transition-colors">Segurança</a></li>
-                <li><a href="#" className="hover:text-emerald-400 transition-colors">Pricing</a></li>
+                <li><Link href="/dashboard" className="hover:text-emerald-400 transition-colors">Funcionalidades</Link></li>
+                <li><Link href="/dashboard" className="hover:text-emerald-400 transition-colors">Segurança</Link></li>
+                <li><Link href="#pricing" className="hover:text-emerald-400 transition-colors">Pricing</Link></li>
               </ul>
             </div>
             <div className="space-y-4">
               <h5 className="font-semibold text-gray-100">Recursos</h5>
               <ul className="space-y-2 text-sm text-gray-500">
-                <li><a href="#" className="hover:text-emerald-400 transition-colors">Blog</a></li>
-                <li><a href="#" className="hover:text-emerald-400 transition-colors">Documentação</a></li>
-                <li><a href="#" className="hover:text-emerald-400 transition-colors">Suporte</a></li>
+                <li><Link href="/dashboard" className="hover:text-emerald-400 transition-colors">Blog</Link></li>
+                <li><Link href="/dashboard" className="hover:text-emerald-400 transition-colors">Documentação</Link></li>
+                <li><Link href="/dashboard" className="hover:text-emerald-400 transition-colors">Suporte</Link></li>
               </ul>
             </div>
             <div className="space-y-4">
               <h5 className="font-semibold text-gray-100">Empresa</h5>
               <ul className="space-y-2 text-sm text-gray-500">
-                <li><a href="#" className="hover:text-emerald-400 transition-colors">Sobre</a></li>
-                <li><a href="#" className="hover:text-emerald-400 transition-colors">Carreiras</a></li>
-                <li><a href="#" className="hover:text-emerald-400 transition-colors">Legal</a></li>
+                <li><Link href="/dashboard" className="hover:text-emerald-400 transition-colors">Sobre</Link></li>
+                <li><Link href="/dashboard" className="hover:text-emerald-400 transition-colors">Carreiras</Link></li>
+                <li><Link href="/dashboard" className="hover:text-emerald-400 transition-colors">Legal</Link></li>
               </ul>
             </div>
           </div>
@@ -173,9 +177,9 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-gray-900 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-600">
           <p>© 2025 BidFlow SaaS. Todos os direitos reservados.</p>
           <div className="flex gap-6">
-            <a href="#" className="hover:text-emerald-400 transition-colors">Terms</a>
-            <a href="#" className="hover:text-emerald-400 transition-colors">Privacy</a>
-            <a href="#" className="hover:text-emerald-400 transition-colors">Cookies</a>
+            <Link href="/dashboard" className="hover:text-emerald-400 transition-colors">Terms</Link>
+            <Link href="/dashboard" className="hover:text-emerald-400 transition-colors">Privacy</Link>
+            <Link href="/dashboard" className="hover:text-emerald-400 transition-colors">Cookies</Link>
           </div>
         </div>
       </footer>
