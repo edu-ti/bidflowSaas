@@ -1,51 +1,23 @@
+'use client';
+
 import { RadarCard, type RadarEdital } from '@/components/RadarCard';
 import { Card } from '@/components/Card';
-
-// Mock data – replace with real API fetch when backend is ready
-const mockEditais: RadarEdital[] = [
-  {
-    id: '1',
-    title: 'Pregão Eletrônico nº 001/2025 – Fornecimento de Software de Gestão Municipal',
-    value: 480000,
-    deadline: '2025-04-15T18:00:00Z',
-    priority_label: 'HIGH',
-    win_probability: 0.78,
-    similarity: 0.91,
-    why_relevant:
-      'Altíssima aderência com o portfólio de soluções SaaS da empresa. Requisitos técnicos alinhados com certificações atuais.',
-  },
-  {
-    id: '2',
-    title: 'Tomada de Preços nº 003/2025 – Serviços de TI e Suporte Técnico',
-    value: 210000,
-    deadline: '2025-04-22T17:00:00Z',
-    priority_label: 'MEDIUM',
-    win_probability: 0.55,
-    similarity: 0.73,
-    why_relevant:
-      'Compatível com serviços de helpdesk e suporte remoto. Concorrência moderada esperada.',
-  },
-  {
-    id: '3',
-    title: 'Pregão Presencial nº 012/2025 – Licenças de Software Educacional',
-    value: 95000,
-    deadline: '2025-05-03T14:00:00Z',
-    priority_label: 'LOW',
-    win_probability: 0.32,
-    similarity: 0.48,
-    why_relevant:
-      'Possibilidade de participação com parceiro educacional. Risco elevado de margens reduzidas.',
-  },
-];
-
-const stats = [
-  { label: 'Editais ativos', value: '24', color: 'text-emerald-400' },
-  { label: 'Análises IA pendentes', value: '7', color: 'text-amber-400' },
-  { label: 'Probabilidade média', value: '61%', color: 'text-blue-400' },
-  { label: 'Valor total em radar', value: 'R$ 785k', color: 'text-purple-400' },
-];
+import { useFetch } from '@/hooks/useFetch';
 
 export default function DashboardPage() {
+  const { data: radarData, loading: radarLoading, error: radarError } = useFetch<{ editais: RadarEdital[] }>('/api/v1/radar');
+  const { data: insightsData, loading: insightsLoading } = useFetch<any>('/api/v1/ai/insights');
+
+  // Show 3 items max on dashboard for Radar
+  const editaisToShow = radarData?.editais?.slice(0, 3) || [];
+
+  const stats = [
+    { label: 'Editais em Radar', value: radarData?.editais?.length || 0, color: 'text-emerald-400' },
+    { label: 'Score Médio', value: insightsData?.average_score ? `${(insightsData.average_score * 100).toFixed(0)}/100` : '--', color: 'text-amber-400' },
+    { label: 'Win Probability Médio', value: insightsData?.average_win_probability ? `${(insightsData.average_win_probability * 100).toFixed(1)}%` : '--', color: 'text-blue-400' },
+    { label: 'Valor Mapeado', value: radarData?.editais ? `R$ ${(radarData.editais.reduce((acc, curr) => acc + curr.value, 0) / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}k` : '--', color: 'text-purple-400' },
+  ];
+
   return (
     <div className="space-y-8">
       {/* Page header */}
@@ -58,7 +30,11 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {stats.map((s) => (
           <Card key={s.label} className="p-6 text-center">
-            <p className={`text-3xl font-bold ${s.color}`}>{s.value}</p>
+            {insightsLoading || radarLoading ? (
+              <div className="h-9 bg-gray-700 animate-pulse rounded max-w-24 mx-auto mb-1"></div>
+            ) : (
+              <p className={`text-3xl font-bold ${s.color}`}>{s.value}</p>
+            )}
             <p className="text-sm text-gray-400 mt-1">{s.label}</p>
           </Card>
         ))}
@@ -66,12 +42,36 @@ export default function DashboardPage() {
 
       {/* Radar section */}
       <div>
-        <h2 className="text-xl font-semibold text-gray-200 mb-4">Radar de Oportunidades</h2>
-        <div className="grid md:grid-cols-3 gap-6">
-          {mockEditais.map((edital) => (
-            <RadarCard key={edital.id} edital={edital} />
-          ))}
-        </div>
+        <h2 className="text-xl font-semibold text-gray-200 mb-4">Radar de Oportunidades (Recentes)</h2>
+        {(radarLoading) ? (
+          <div className="grid md:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-gray-800 rounded-2xl p-6 h-[340px] animate-pulse">
+                <div className="h-6 bg-gray-700 rounded w-3/4 mb-4" />
+                <div className="h-4 bg-gray-700 rounded w-1/2 mb-2" />
+                <div className="h-4 bg-gray-700 rounded w-1/3 mb-4" />
+                <div className="space-y-2 mt-8">
+                   <div className="h-4 bg-gray-700 rounded w-full" />
+                   <div className="h-4 bg-gray-700 rounded w-5/6" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : radarError ? (
+          <div className="p-4 bg-red-900/20 border border-red-500/50 rounded-xl text-red-200">
+            Erro ao carregar radar: {radarError}
+          </div>
+        ) : editaisToShow.length === 0 ? (
+          <div className="p-8 text-center text-gray-400 bg-gray-800 rounded-2xl border border-gray-700 border-dashed">
+            Nenhum edital encontrado no radar hoje.
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-3 gap-6">
+            {editaisToShow.map((edital) => (
+              <RadarCard key={edital.id} edital={edital} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

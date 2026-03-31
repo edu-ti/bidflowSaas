@@ -61,4 +61,24 @@ export const postFeedback = async (payload: any) => {
   return res.data;
 };
 
+export const postCheckout = async (plan: string) => {
+  const res = await api.post('/api/v1/billing/checkout', { plan });
+  return res.data;
+};
+
+export const followRadar = async (id: string) => {
+  const res = await api.post(`/api/v1/radar/follow/${id}`);
+  return res.data;
+};
+
+export const readNotification = async (id: string) => {
+  const res = await api.post(`/api/v1/notifications/read/${id}`);
+  return res.data;
+};
+
+export const getAIHistory = async () => {
+  const res = await api.get('/api/v1/ai/history');
+  return res.data;
+};
+
 export default api;

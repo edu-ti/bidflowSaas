@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, Monitor, Bell, Settings, CreditCard, LogOut } from 'lucide-react';
+import { Home, Search, Monitor, Bell, Settings, CreditCard, LogOut, Briefcase } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const navItems = [
@@ -11,6 +11,7 @@ const navItems = [
   { name: 'Monitor', href: '/dashboard/monitor', icon: Monitor },
   { name: 'Notificações', href: '/dashboard/notifications', icon: Bell },
   { name: 'IA', href: '/dashboard/ai', icon: Settings },
+  { name: 'CRM Licitação', href: '/dashboard/crm', icon: Briefcase },
   { name: 'Billing', href: '/dashboard/billing', icon: CreditCard },
 ];
 

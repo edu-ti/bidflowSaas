@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Badge } from '@/components/Badge';
 import { cn } from '@/lib/utils';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Loader2 } from 'lucide-react';
+import { followRadar } from '@/lib/api';
+import { toast } from 'sonner';
 
 export interface RadarEdital {
   id: string;
@@ -15,6 +17,24 @@ export interface RadarEdital {
 }
 
 export const RadarCard: React.FC<{ edital: RadarEdital }> = ({ edital }) => {
+  const [isFollowing, setIsFollowing] = useState(false);
+
+  const handleFollow = async () => {
+    setIsFollowing(true);
+    try {
+      await followRadar(edital.id);
+      toast.success('Edital acompanhado', {
+        description: `O edital ${edital.title.slice(0, 30)}... foi adicionado ao seu CRM.`,
+      });
+    } catch (err: any) {
+      toast.error('Falha ao seguir', {
+        description: err.response?.data?.message || err.message || 'Erro desconhecido',
+      });
+    } finally {
+      setIsFollowing(false);
+    }
+  };
+
   const priorityColor =
     edital.priority_label === 'HIGH'
       ? 'bg-red-600'
@@ -73,8 +93,13 @@ export const RadarCard: React.FC<{ edital: RadarEdital }> = ({ edital }) => {
         >
           Ver análise completa <ArrowRight className="ml-1" size={14} />
         </a>
-        <button className="bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1 rounded-lg text-sm transition-colors">
-          Seguir edital
+        <button 
+          onClick={handleFollow}
+          disabled={isFollowing}
+          className="bg-gray-700 disabled:opacity-50 hover:bg-gray-600 text-gray-200 px-3 py-1 flex items-center gap-2 rounded-lg text-sm transition-colors"
+        >
+          {isFollowing ? <Loader2 size={14} className="animate-spin" /> : null}
+          {isFollowing ? 'Processando...' : 'Seguir edital'}
         </button>
       </div>
     </div>

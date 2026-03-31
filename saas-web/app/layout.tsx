@@ -1,5 +1,6 @@
 import './globals.css';
 import type { Metadata } from 'next';
+import { Toaster } from 'sonner';
 
 export const metadata: Metadata = {
   title: 'BidFlow – AI Copilot for Licitações',
@@ -23,6 +24,7 @@ export default function RootLayout({
       </head>
       <body className="bg-gray-900 text-gray-100" style={{ fontFamily: "'Inter', sans-serif" }}>
         {children}
+        <Toaster position="top-right" theme="dark" richColors />
       </body>
     </html>
   );

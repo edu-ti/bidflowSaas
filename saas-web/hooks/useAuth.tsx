@@ -16,6 +16,7 @@ type AuthContextType = {
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  getUser: () => User | null;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -60,8 +61,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (typeof window !== 'undefined') window.location.href = '/login';
   };
 
+  const getUser = () => user;
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, signup, logout, getUser }}>
       {children}
     </AuthContext.Provider>
   );
