@@ -9,7 +9,7 @@ SERVICES:
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
+      test: [ "CMD", "pg_isready", "-U", "postgres" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -23,7 +23,7 @@ SERVICES:
     ports:
       - "6379:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -49,3 +49,41 @@ volumes:
   postgres_data:
   redis_data:
   pgadmin_data:
+
+  # Backend em Go
+  backend:
+    build:
+      context: ./backend # Ajuste para o caminho da sua pasta de código Go
+      dockerfile: Dockerfile
+    container_name: bidflow_backend
+    environment:
+      - DB_SOURCE=postgresql://postgres:postgres@postgres:5432/bidflow?sslmode=disable
+      - REDIS_ADDRESS=redis:6379
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Frontend em Next.js
+  frontend:
+    build:
+      context: ./frontend # Ajuste para o caminho da sua pasta Next.js
+      dockerfile: Dockerfile
+    container_name: bidflow_frontend
+    environment:
+      - NEXT_PUBLIC_API_URL=https://api.bidflow.com.br
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+  # Túnel da Cloudflare (Para não precisar do instalador no Windows)
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: bidflow_tunnel
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    restart: unless-stopped
