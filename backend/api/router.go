@@ -10,9 +10,7 @@ import (
 	"lastsaas/core/auth"
 	"lastsaas/core/billing"
 	"lastsaas/core/tenant"
-	"lastsaas/modules/ai"
-	"lastsaas/modules/crm"
-	"lastsaas/modules/licitacoes"
+	"lastsaas/internal/api/handlers"
 )
 
 type RouterConfig struct {
@@ -21,9 +19,9 @@ type RouterConfig struct {
 	AuthSvc    *auth.Service
 	TenantSvc  *tenant.Service
 	BillingSvc *billing.Service
-	CRMHandler *crm.Handler
-	LicHandler *licitacoes.Handler
-	AIHandler  *ai.Handler
+	CRMHandler *handlers.CRMHandler
+	BidsHandler *handlers.BidsHandler
+	AIHandler  *handlers.AIHandler
 }
 
 func NewRouter(cfg RouterConfig) http.Handler {
@@ -58,29 +56,27 @@ func NewRouter(cfg RouterConfig) http.Handler {
 	// General higher rate limit for standard authenticated routes
 	apiRateLimit := middleware.RateLimit(100.0, 50)
 
-	// CRM Module Isolation - flat subgroup with strict exact Auth -> Tenant -> Module order
+	// CRM Module Isolation
 	crmRouter := api.PathPrefix("/crm").Subrouter()
 	crmRouter.Use(apiRateLimit)
 	crmRouter.Use(authMiddleware)
 	crmRouter.Use(tenantMiddleware)
-	crmRouter.Use(middleware.RequireModule(cfg.DB, "crm"))
-	crm.RegisterRoutes(crmRouter, cfg.CRMHandler)
+	crmRouter.HandleFunc("/funnels", cfg.CRMHandler.ListFunnels).Methods(http.MethodGet)
 
-	// Licitacoes Module Isolation
-	licitacoesRouter := api.PathPrefix("/licitacoes").Subrouter()
-	licitacoesRouter.Use(apiRateLimit)
-	licitacoesRouter.Use(authMiddleware)
-	licitacoesRouter.Use(tenantMiddleware)
-	licitacoesRouter.Use(middleware.RequireModule(cfg.DB, "licitacoes"))
-	licitacoes.RegisterRoutes(licitacoesRouter, cfg.LicHandler)
+	// Bids Module Isolation
+	bidsRouter := api.PathPrefix("/bids").Subrouter()
+	bidsRouter.Use(apiRateLimit)
+	bidsRouter.Use(authMiddleware)
+	bidsRouter.Use(tenantMiddleware)
+	bidsRouter.HandleFunc("", cfg.BidsHandler.ListBids).Methods(http.MethodGet)
+	bidsRouter.HandleFunc("", cfg.BidsHandler.CreateBid).Methods(http.MethodPost)
 
 	// AI Module Isolation
 	aiRouter := api.PathPrefix("/ai").Subrouter()
 	aiRouter.Use(apiRateLimit)
 	aiRouter.Use(authMiddleware)
 	aiRouter.Use(tenantMiddleware)
-	aiRouter.Use(middleware.RequireModule(cfg.DB, "ai"))
-	ai.RegisterRoutes(aiRouter, cfg.AIHandler, cfg.DB)
+	aiRouter.HandleFunc("/insights", cfg.AIHandler.GetInsights).Methods(http.MethodGet)
 
 	return r
 }

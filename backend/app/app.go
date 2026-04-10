@@ -12,10 +12,8 @@ import (
 	"lastsaas/core/billing"
 	"lastsaas/core/db"
 	"lastsaas/core/tenant"
+	"lastsaas/internal/api/handlers"
 	"lastsaas/internal/config"
-	"lastsaas/modules/ai"
-	"lastsaas/modules/crm"
-	"lastsaas/modules/licitacoes"
 )
 
 type App struct {
@@ -48,14 +46,10 @@ func New(cfg *config.Config) (*App, error) {
 	authSvc := auth.NewService(database.Client)
 	tenantSvc := tenant.NewService(database.Client)
 	billingSvc := billing.NewService(database.Client)
-	crmSvc := crm.NewService(database.Client)
-	licSvc := licitacoes.NewService(database.Client)
-	aiSvc := ai.NewService(database.Client, "localhost:6379") // default redis
-
 	// Initialize Handlers
-	crmHandler := crm.NewHandler(crmSvc)
-	licHandler := licitacoes.NewHandler(licSvc)
-	aiHandler := ai.NewHandler(aiSvc)
+	crmHandler := handlers.NewCRMHandler(database.Client)
+	bidsHandler := handlers.NewBidsHandler(database.Client)
+	aiHandler := handlers.NewAIHandler(database.Client)
 
 	// Initialize Router
 	routerCfg := api.RouterConfig{
@@ -65,7 +59,7 @@ func New(cfg *config.Config) (*App, error) {
 		TenantSvc:  tenantSvc,
 		BillingSvc: billingSvc,
 		CRMHandler: crmHandler,
-		LicHandler: licHandler,
+		BidsHandler: bidsHandler,
 		AIHandler:  aiHandler,
 	}
 

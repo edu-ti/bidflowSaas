@@ -9,12 +9,12 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/hibiken/asynq v0.26.0
-	github.com/lib/pq v1.12.0
+	github.com/jackc/pgx/v5 v5.5.5
+	github.com/pgvector/pgvector-go v0.1.1
 	github.com/pquerna/otp v1.5.0
 	github.com/shirou/gopsutil/v4 v4.26.1
 	github.com/stripe/stripe-go/v78 v78.12.0
 	github.com/stripe/stripe-go/v82 v82.5.1
-	go.mongodb.org/mongo-driver v1.17.9
 	golang.org/x/crypto v0.46.0
 	golang.org/x/oauth2 v0.35.0
 	golang.org/x/sync v0.19.0

@@ -1,6 +1,32 @@
 import axios from 'axios';
 import type { AuthResponse, MFARequiredResponse, AuthProviders, ActiveSession, ActivityLogEntry, PasskeyCredential, ImpersonationResponse, TenantMember, TenantDetail, TenantListItem, UserListItem, Message, AboutInfo, SystemLog, ConfigVar, UserDetail, UserMembershipDetail, DeletePreflightResponse, Plan, EntitlementKeyInfo, PublicPlansResponse, CreditBundle, SystemNode, SystemMetric, FinancialTransaction, DailyMetricPoint, IntegrationCheck, APIKey, Webhook, WebhookDelivery, WebhookEventTypeInfo, BrandingConfig, MediaItem, CustomPage, Promotion, EligibleProduct, Announcement, UsageSummary, Invitation, FunnelData, CohortRow, EngagementData, KPIData, CustomEventData, EventTypeSummary, EventDefinition, SankeyData } from '../types';
 
+export interface Bid {
+  id: string;
+  tenant_id: string;
+  title: string;
+  description?: string;
+  published_date?: string;
+  status: string;
+  portal?: string;
+}
+
+export interface CRMStage {
+  id: string;
+  tenant_id: string;
+  bid_id?: string;
+  stage: string;
+  notes?: string;
+}
+
+export interface AIInsight {
+  id: string;
+  tenant_id: string;
+  bid_id?: string;
+  insight_text: string;
+  similarity?: number;
+}
+
 const api = axios.create({
   baseURL: '/api',
   headers: { 'Content-Type': 'application/json' },
@@ -508,6 +534,24 @@ export const telemetryApi = {
     api.post('/telemetry/events', data).then(r => r.data),
   trackBatch: (events: { event: string; properties?: Record<string, unknown> }[]) =>
     api.post('/telemetry/events/batch', { events }).then(r => r.data),
+};
+
+// --- BidFlow Domain ---
+export const bidsApi = {
+  list: () =>
+    api.get<{ bids: Bid[] }>('/bids').then(r => r.data),
+  create: (data: Partial<Bid>) =>
+    api.post<Bid>('/bids', data).then(r => r.data),
+};
+
+export const crmApi = {
+  listFunnels: () =>
+    api.get<{ funnels: CRMStage[] }>('/crm/funnels').then(r => r.data),
+};
+
+export const aiApi = {
+  getInsights: () =>
+    api.get<{ insights: AIInsight[] }>('/ai/insights').then(r => r.data),
 };
 
 export default api;

@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"time"
 
-	_ "github.com/lib/pq"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -18,8 +18,8 @@ type PostgresDB struct {
 }
 
 func Connect(uri string) (*PostgresDB, error) {
-	slog.Info("Connecting to PostgreSQL...")
-	db, err := sql.Open("postgres", uri)
+	slog.Info("Connecting to PostgreSQL using pgx...")
+	db, err := sql.Open("pgx", uri)
 	if err != nil {
 		return nil, err
 	}
